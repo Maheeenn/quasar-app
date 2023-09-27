@@ -8,10 +8,10 @@ const routes = [
       { path: 'index', component: () => import('pages/Index.vue') },
       { path: '', component: () => import('pages/HomePage.vue')},
       {
-        path: '/article/:id', // Use a parameter to pass the article's ID or unique identifier
-        name: 'article-details',
-        component: ArticleDetails,
-      },
+        path: '/article/:id',
+        name: 'ArticleDetails',
+        component: () => import('pages/ArticleDetails.vue')
+      }
     ]
   },
 

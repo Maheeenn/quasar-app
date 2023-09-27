@@ -1,6 +1,7 @@
+
 <template>
-  <q-page>
-    
+  <div>
+    <q-page>
       <!-- Search form with advanced filters -->
       <q-form @submit="searchNews">
         <div class="filter-container">
@@ -38,81 +39,78 @@
           </div>
           <!-- Search Button -->
           <div class="filter-item q-col-xs-12 q-col-md-12">
-            <q-btn  id="search-btn"
+            <q-btn
+              id="search-btn"
               type="submit"
               label="Search"
-              color="primary"
               dense
               icon="search"
-              
               @click.prevent="searchNews"
             />
           </div>
         </div>
       </q-form>
 
-    <!-- List of news articles -->
-    <div v-if="articles.length > 0">
-      <!-- Use q-card-columns to make cards responsive -->
-      <q-card-section q-card-columns>
-        <q-card v-for="article in articles" :key="article.url" class="q-mb-md q-col-md-6">
-          <q-card-section>
-            <div style="display: flex; align-items: flex-start;">
-              <!-- Increase the size of the circle by setting the 'size' prop -->
-              <q-avatar size="150px">
-                <img :src="article.urlToImage" alt="Article Image" />
-              </q-avatar>
-              <div class="q-ml-md">
-                <q-card-title>{{ article.title }}</q-card-title>
-                <q-card-main>
-                  <!-- Set the background and text color for the article content -->
-                  <div style="background-color: white; color: black;">
-                    <div v-html="article.content"></div>
+      <!-- List of news articles -->
+      <div v-if="articles.length > 0">
+        <!-- Use q-card-columns to make cards responsive -->
+        <q-card-section q-card-columns>
+          <q-card v-for="article in articles" :key="article.url" class="q-mb-md q-col-md-6">
+            <q-card-section>
+              <div style="display: flex; align-items: flex-start;">
+                <!-- Increase the size of the circle by setting the 'size' prop -->
+                <q-avatar size="150px">
+                  <img :src="article.urlToImage" alt="Article Image" />
+                </q-avatar>
+                <div class="q-ml-md">
+                  <q-card-title>{{ article.title }}</q-card-title>
+                  <q-card-main>
+                    <!-- Set the background and text color for the article content -->
+                    <div style="background-color: white; color: black;">
+                      <div v-html="article.content"></div>
+                    </div>
+                  </q-card-main>
+                  <div class="q-card-separator"></div>
+                  <div class="q-card-actions">
+                    <!-- Read More button inside the loop for each article -->
+                    <q-btn
+                      label="Read More"
+                      @click="showArticleDetails(article)"
+                    />
+                    <!-- Show date and source at the end of the article -->
+                    <div class="q-font-small text-grey-7">
+                      Published on: {{ formatDate(article.publishedAt) }}
+                      <br />
+                      Source: {{ article.source.name }}
+                    </div>
                   </div>
-                </q-card-main>
-                <div class="q-card-separator"></div>
-                <div class="q-card-actions">
-                  <!-- Add "Read More" button -->
-                  <router-link
-                    :to="{ name: 'ArticleDetails', params: { id: article.id } }"
-                  >
-                    <q-btn label="Read more" color="#421a42" />
-                  </router-link>
-                </div>
-                <!-- Show date and source at the end of the article -->
-                <div class="q-font-small text-grey-7">
-                  Published on: {{ formatDate(article.publishedAt) }}
-                  <br />
-                  Source: {{ article.source.name }}
                 </div>
               </div>
-            </div>
-          </q-card-section>
-        </q-card>
-      </q-card-section>
-    </div>
-   
-       <!-- Display a message if there are no articles -->
-       <q-card v-else class="no-articles-card">
+            </q-card-section>
+          </q-card>
+        </q-card-section>
+      </div>
 
+      <!-- Display a message if there are no articles -->
+      <q-card v-else class="no-articles-card">
         <q-card-main>No articles found.</q-card-main>
       </q-card>
-     <!-- Pagination -->
-     
-     
-     <q-pagination
+
+     <!-- Pagination Container -->
+    <div class="pagination-container">
+      <q-pagination
         v-model="currentPage"
-        max="5"
+        :max="5"
         direction-links
         outline
-        color="#251241"
+        git remote add origin
         active-design="unelevated"
         active-color="brown"
         active-text-color="white"
       />
-
-    <!-- </q-container> -->
-  </q-page>
+    </div>
+    </q-page>
+  </div>
 </template>
 
 
@@ -135,13 +133,28 @@ export default {
   created() {
     this.fetchNewsSources();
     this.searchNews();
+    this.fetchInitialArticles();
   },
   watch: {
     currentPage: "loadPage",
   },
   methods: {
+    fetchInitialArticles() {
+   
+      const apiUrl = `https://newsapi.org/v2/everything?domains=wsj.com&apiKey=${apiKey}&pageSize=${this.itemsPerPage}`;
+
+    this.$axios
+      .get(apiUrl)
+      .then((response) => {
+        this.articles = response.data.articles;
+        this.totalPages = Math.ceil(response.data.totalResults / this.itemsPerPage);
+      })
+      .catch((error) => {
+        console.error("Error fetching initial articles:", error);
+      });
+  },
     fetchNewsSources() {
-  const apiKey = "2541b8085be64489ac1a0cd9d4e93103";
+
   const sourceUrl = `https://newsapi.org/v2/sources?apiKey=${apiKey}`;
 
   this.$axios
@@ -339,7 +352,18 @@ searchNews() {
 .no-articles-card img {
   margin-bottom: 10px;
 }
+.pagination-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 20px; /* Adjust the distance from the bottom as needed */
+}
 
+@media screen and (max-width: 600px) {
+  .pagination-container {
+    width: 100%;
+  }
+}
 /* Responsive styles */
 @media screen and (max-width: 600px) {
   .filter-item.q-col-xs-12 {
